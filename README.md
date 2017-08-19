@@ -37,6 +37,7 @@ export VPN_GROUP=
 
 5. do some born stuff again :
 ```
+source ~/.bashrc
 sudo chmod +x vpn_openconnect
 sudo cp vpn_openconnect /usr/bin/
 ```

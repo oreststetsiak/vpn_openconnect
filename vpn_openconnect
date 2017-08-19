@@ -1,1 +1,151 @@
 #!/bin/bash
+
+# check if vipaccess is installed and configured
+if [ -z "$(command -v vipaccess)" ]; then
+  echo 'Error: vipaccess is not installed.'
+  exit 1
+fi
+
+# check number of input parameters
+if [ $# -ne 1 ]; then
+    pod2usage -verbose 1 "$0"
+    exit 1
+fi
+
+VIPACCESS_TOTP=$(vipaccess)
+VPN_PASSWORD=${LDAP_PASSWORD}${VIPACCESS_TOTP}
+OPENCONNECT_PIDS=$(ps auux | grep -v grep | grep openconnect | awk '{ print $2 }')
+
+# logging information
+function log_info {
+    echo -e "INFO: $*."
+}
+
+# logging errors
+function log_error {
+    echo -e "$ERROR: $*."
+}
+
+if [[ -z ${LDAP_PASSWORD} || \
+                -z ${VPN_SERVER} || \
+                -z ${VPN_GROUP} || \
+                -z ${LDAP_USERNAME} ]]; then
+  MESSAGE="some env variables is not set"
+  log_info ${MESSAGE}
+  pod2usage -verbose 1 "$0"
+  exit 1
+fi
+
+function vpn_status {
+    if [[ -z ${OPENCONNECT_PIDS} ]]; then
+        MESSAGE="Openconnect process not found"
+        log_info ${MESSAGE}
+    else
+        MESSAGE="Openconnect is running with next PID ${OPENCONNECT_PIDS}"
+        log_info ${MESSAGE}
+    fi
+}
+
+function vpn_start {
+    echo ${VPN_PASSWORD} | sudo openconnect -u ${LDAP_USERNAME} --authgroup=${VPN_GROUP} --background --quiet ${VPN_SERVER} > /dev/null 2>&1
+    vpn_status
+}
+
+function vpn_stop {
+    for PID in ${OPENCONNECT_PIDS}; do
+        MESSAGE="stoppind PID ${PID} ..."
+        log_info ${MESSAGE}
+        sudo kill -15 ${PID}
+        MESSAGE="successful"
+        log_info ${MESSAGE}
+    done
+    vpn_status
+}
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+
+    --help|-h)
+    pod2usage -verbose 1 "$0"
+    exit 0
+    ;;
+
+    start)
+    vpn_start
+    shift
+    ;;
+
+    stop)
+    vpn_stop
+    shift
+    ;;
+
+    status)
+    vpn_status
+    shift
+    ;;
+
+    restart)
+    vpn_status
+    vpn_stop
+    vpn_start
+    shift
+    ;;
+
+    *)
+      echo "Unknown option: $1" >&2
+      pod2usage --output ">&2" "$0"
+      exit 1
+    ;;
+
+  esac
+done
+
+exit 0
+
+=pod
+
+=head1 NAME
+
+vpn_openconnect - script to setup openconnect with vip access totp
+
+=head1 SYNOPSIS
+
+vpn_openconnect [OPTION]
+
+=head1 OPTIONS
+
+=over 2
+
+=item B<--help> | B<-h>
+
+Print the brief help message and exit.
+
+=item B<start>
+
+start vpn session
+
+=item B<stop>
+
+stop vpn session
+
+=item B<restart>
+
+restart vpn session
+
+=item B<status>
+
+get status of vpn session
+
+
+=head1 DESCRIPTION
+
+PocketMUD is a perl re-implementation of SocketMUD.
+
+It is meant to be a barebones MUD server, written in perl,
+which can be easily modified and extended.
+
+=head1 METHODS
+
+=cut
