@@ -14,7 +14,7 @@ fi
 
 VIPACCESS_TOTP=$(vipaccess)
 VPN_PASSWORD=${LDAP_PASSWORD}${VIPACCESS_TOTP}
-OPENCONNECT_PIDS=$(ps auux | grep -v grep | grep openconnect | awk '{ print $2 }')
+OPENCONNECT_PIDS=$(pidof openconnect)
 
 # logging information
 function log_info {
