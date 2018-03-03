@@ -6,14 +6,14 @@ Works on LinuxMint 18.2, should be ok on correspond Ubuntu ver
 
 1. install some needed packages in right order:
 ```
-sudo apt-get install openconnect
-sudo apt-get install python-pip
+sudo apt-get install -y openconnect
+sudo apt-get install -y python-pip
 sudo pip install setuptools
 sudo pip install lxml oath PyCrypto requests
 ```
 2. install and setup VIPAccess TOTP:
 ```
-git clone https://github.com/dlenski/python-vipaccess.git
+#git clone https://github.com/dlenski/python-vipaccess.git
 cd python-vipaccess
 sudo pip install .
 vipaccess provision -o ~/.vipaccess
@@ -38,6 +38,7 @@ export VPN_GROUP=
 5. do some born stuff again :
 ```
 source ~/.bashrc
+cd ../
 sudo chmod +x vpn_openconnect
 sudo cp vpn_openconnect /usr/bin/
 ```
